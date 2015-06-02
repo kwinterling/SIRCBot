@@ -1,6 +1,4 @@
-% Scheme/Racket IRC Bot
-% Karl Winterling
-% June 1, 2015
+
 
 # Description
 
