@@ -2,7 +2,7 @@
 
 ;; Test variables
 
-(define test-msg ":WiZ!jto@tolsun.oulou.fi NICK Kilroy\r\n")
+(define test-msg ":WiZ!jto@tolsun.oulou.fi NICK Kilroy :Nick change\r\n")
 
 ;; Code
 
@@ -11,6 +11,20 @@
 (define realname "SchemeBot")
 (define readbuffer "")
 (define port 6667)
+
+(define prefix-px
+  (pregexp
+   (string-append "(:"
+                  "([[:graph:]]+)!"
+                  "([[:graph:]]+)@"
+                  "([[:graph:]]+) |)"
+                  "([[:ascii:]]+)"
+                  "(:([[:graph:]]*))|")))
+
+(define not-prefix-px
+  (pregexp
+   (string-append "([[:ascii:]]+)"
+                  "(:([[:graph:]]*))|")))
 
 (define irc-msgs (make-hash))
 
@@ -26,11 +40,25 @@
 
 ;; :nick!host msg :post
 
-(define (parse-msg smsg)
-  (let ((rs
-         (map (lambda (mpart) (string-split mpart)) (string-split smsg ":"))))
-    (car rs)))
+(struct pmsg
+  (nick usern host body post))
 
+(struct npmsg
+  (body post))
+ 
+(define (msg-match msg)
+  (if (equal? (string-ref msg 0) #\:)
+      (regexp-match prefix-px msg)
+      (regexp-match not-prefix-px msg)))
+
+(define (parse-pmsg msg)
+  (let ((ms (msg-match msg)))
+    (pmsg (list-ref ms 2) ; nick
+          (list-ref ms 3) ; usern
+          (list-ref ms 4) ; host
+          (list-ref ms 5) ; body
+          (list-ref ms 7)))) ; post
+         
 
 (define (irc-connect host port)
   (define rbuf "")
